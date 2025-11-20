@@ -1,4 +1,93 @@
- 
+You got it\! Here is the ASCII diagram of the pipeline flow for easy copying:
+
+```
++-------------------------------------------------------------+
+|                                                             |
+| 🔬 PHASE I: Targeted GEX Alignment & Correction             |
+|                                                             |
++-------------------------------------------------------------+
+       |
+       v
++------------------------------------+
+|  STEP 1: Custom Genome Indexing    |  <-- GFP_transgene_vCHEK2...
+|  (cellranger mkref)                |
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  STEP 2: Targeted Read Adaptation  |  <-- Wraper_scripts/127/146/171
+|  (Format FastQ for CellRanger)     |
++------------------------------------+
+       | (Parallel for MCO_01326-01333)
+       v
++------------------------------------+
+|  STEP 3: CellRanger GEX Counting   |  <-- sbatch 18_Cell_ranger_count
+|  (Alignment to custom reference)   |
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  STEP 4: Background Correction     |  <-- sbatch 15_cellbender
+|  (CellBender on Targeted GEX)      |
++------------------------------------+
+       |
+       |
+       +=====================================================+
+                                |
+                                v
++-------------------------------------------------------------+
+|                                                             |
+| 🧬 PHASE II: Multiome Integration & Annotation               |
+|                                                             |
++-------------------------------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 1: CellRanger ArcCount      |
+|  (Raw Multiome GEX/ATAC matrices)  |
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 2: Pre-processing & Alignment | <-- Initial Seurat, CellBender, snATAC,
+|  (QC, Peak Merge, Barcode Align)     |     LARRY filtering
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 3: Doublet Detection (Amulet)|
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 4 & 5: Seurat Re-pass & Merge |
+|  (Final Multiome Object Creation)    |
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 6 & 7: Final QC & Recluster   |
+|  (Interactive QC then Recluster)     |
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 8: Annotation & Subclustering | <-- Cell Typist, mapping_cell_types
+|  (Genotype & Cell Identity Assign)   |
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 9: Genotype-Specific Export   | <-- Recluster on genotyped cells,
+|  (Link peaks, Export h5ad for SIMBA)|     Export final files
++------------------------------------+
+       |
+       v
++------------------------------------+
+|  BLOCK 10: Final RPCA & Graphs     | <-- 201_RPCA, Final_graphs.ipynb
++------------------------------------+
+```
+
 ### scratch path /scratch/manuel.tardaguila/2025_hESC_competition_assays_reanalysed
 
 ########################## GEX libraries ###################################################################################################################
