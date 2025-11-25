@@ -64,7 +64,7 @@ frag_file=$(echo "$output_dir""merged.atac_fragments.tsv.gz")
 
 
 mem=$(echo "8192")
-processors=$(echo "30")
+processors=$(echo "4")
 total_memory=$(( mem * processors ))
 
 echo "$processors"
@@ -72,7 +72,7 @@ echo "$total_memory"
 
 # 15 8192
 
-
+#  --dependency=afterany:$myjobid_Recluster
 
 myjobid_MACS2_calling_by_annotation=$(sbatch --dependency=afterany:$myjobid_Recluster --job-name $name_MACS2_calling_by_annotation --output=$outfile_MACS2_calling_by_annotation --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=$processors --mem-per-cpu=$mem --parsable --wrap="conda run -p /home/manuel.tardaguila/conda_envs/multiome_QC_DEF/ Rscript $Rscript_MACS2_calling_by_annotation --db_filt_clustered_QCed_cell_annotated_MJ_only_genotyped_reclustered $db_filt_clustered_QCed_cell_annotated_MJ_only_genotyped_reclustered --frag_file $frag_file --processors $processors --total_memory $total_memory --type $type --out $output_dir")
 myjobid_seff_MACS2_calling_by_annotation=$(sbatch --dependency=afterany:$myjobid_MACS2_calling_by_annotation --open-mode=append --output=$outfile_MACS2_calling_by_annotation --job-name="seff" --partition=cpuq --time=24:00:00 --nodes=1 --ntasks-per-node=1 --mem-per-cpu=128M --parsable --wrap="seff $myjobid_MACS2_calling_by_annotation >> $outfile_MACS2_calling_by_annotation")
@@ -90,7 +90,7 @@ Pythonscript_convert_to_h5ad=$(echo "$Pythonscripts_path""4_export_to_h5ad_ATAC_
 
 
 metadata_file=$(echo "$output_dir""final_cell_metadata.rds")
-rna_matrix_file=$(echo "$output_dir""final_rna_sct_matrix.rds")
+rna_matrix_file=$(echo "$output_dir""final_rna_corrected_unormalized_matrix.rds")
 atac_matrix_file=$(echo "$output_dir""final_atac_matrix.rds")
 output_name=$(echo "merged_clusters_final")
 

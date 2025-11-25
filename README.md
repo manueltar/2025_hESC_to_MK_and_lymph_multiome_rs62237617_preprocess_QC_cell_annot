@@ -231,7 +231,7 @@ $ bash ~/Scripts/Wraper_scripts/200_Multiome_recluster_after_QC.sh /scratch/manu
 ----> Jupyter notebook: Subclustering.ipynb
 ----> Jupyter notebook: notebook_to_assign_barcodes.ipynb
 
-### Block 9 Recluster only on genotyped cells, call peaks using cell annotation and export final ATAC and RNA files to h5ad files for SIMBA
+### Block 9 Recluster only on genotyped cells, call peaks using cell annotation and export final ATAC and RNA (corrected by Cell Bender but unormalized, the RNA layer) files to h5ad files for SIMBA
 
 $ bash /home/manuel.tardaguila/Scripts/Wraper_scripts/202_Recluster_and_export_h5ad_after_G_v2.sh /scratch/manuel.tardaguila/2025_hESC_competition_assays_reanalysed/ processing_outputs
 

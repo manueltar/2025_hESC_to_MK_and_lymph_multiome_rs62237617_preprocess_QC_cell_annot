@@ -101,47 +101,47 @@ MACS2_call_peaks = function(option_list)
   # cat("adata_0\n")
   # cat(str(adata))
   # cat("\n")
-  
-  
-  
+
+
+
   ## Call Peaks and make new peak matrix
-  
-  
+
+
   DefaultAssay(adata) <- 'ATAC'
   peaks <- CallPeaks(
     object = adata,
-    group.by = "Construction_annotation",    
+    group.by = "Construction_annotation",
     macs2.path = "/group/soranzo/conda_envs/Manuel_macs2/bin/macs2")
-  
+
   frag_file<-opt$frag_file
-  
+
   Fragmobj <- CreateFragmentObject(frag_file,cells =Cells(adata))
-  
-  
+
+
   peakmat = FeatureMatrix(fragments = Fragmobj, features = peaks, cells = Cells(adata), process_n = 10000,
                           sep = c(":", "-"), verbose = TRUE)
-  
-  norm_chr = rownames(peakmat)[stringr::str_split_fixed(rownames(peakmat), ":",2)[,1] %in% 
+
+  norm_chr = rownames(peakmat)[stringr::str_split_fixed(rownames(peakmat), ":",2)[,1] %in%
                                  paste0("chr", c(1:22, "X", "Y"))]
-  
+
   peakmat=peakmat[norm_chr,]
-  
+
   suppressMessages(annotations <- GetGRangesFromEnsDb(ensdb=EnsDb.Hsapiens.v86))
   seqlevelsStyle(annotations)  <- 'UCSC'
   genome(annotations)          <- 'hg38'
-  
-  suppressWarnings(chrom_assay <- CreateChromatinAssay(counts=peakmat, sep=c(':', '-'), 
-                                                       genome='hg38', fragments=Fragmobj, 
-                                                       min.cells=-1, min.features=-1, 
+
+  suppressWarnings(chrom_assay <- CreateChromatinAssay(counts=peakmat, sep=c(':', '-'),
+                                                       genome='hg38', fragments=Fragmobj,
+                                                       min.cells=-1, min.features=-1,
                                                        annotation=annotations))
-  
-  
-  
+
+
+
   adata[['ATAC_by_Construction_annotation']] <- chrom_assay
-  
+
   #### Save third clustered filtered object  ------------------
-  
-  
+
+
   setwd(out)
 
   saveRDS(adata,file="merged_clusters_final.rds")
@@ -150,8 +150,12 @@ MACS2_call_peaks = function(option_list)
   
   log_info_simple("Processing RNA/SCT matrix for export.")
   assays_list <- names(adata)
-  rna_assay_name <- ifelse("SCT" %in% assays_list, "SCT", "RNA")
-  rna_slot_name <- ifelse(rna_assay_name == "SCT", "data", "scale.data") # Exporting normalized/scaled data
+  
+  # V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V V 
+  # CRITICAL MODIFICATION: Use the 'RNA' assay and the 'counts' slot to export unnormalized data
+  rna_assay_name <- "RNA"
+  rna_slot_name <- "counts" # Exporting RAW COUNTS (Cell Bender corrected)
+  # ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ 
   
   corrected_rna_matrix <- GetAssayData(adata, assay = rna_assay_name, slot = rna_slot_name)
   
@@ -172,6 +176,12 @@ MACS2_call_peaks = function(option_list)
   }
   
   corrected_rna_matrix@x <- as.numeric(corrected_rna_matrix@x)
+  
+  # 1. Save the RNA matrix
+  saveRDS(corrected_rna_matrix, file = "final_rna_corrected_unormalized_matrix.rds")
+  log_info_simple("Saved final_rna_corrected_unormalized_matrix.rds")
+  
+  quit(status = 1)
   
   # --- NEW CODE: DIAGNOSTIC AND EXPORT ATAC MATRIX ---
   
@@ -203,9 +213,7 @@ MACS2_call_peaks = function(option_list)
   cell_barcodes_to_keep <- colnames(corrected_rna_matrix) # Use RNA barcodes for consistent order
   cell_metadata <- adata@meta.data[cell_barcodes_to_keep, ] 
   
-  # 1. Save the RNA matrix
-  saveRDS(corrected_rna_matrix, file = "final_rna_sct_matrix.rds")
-  log_info_simple("Saved final_rna_sct_matrix.rds.")
+ 
   
   # 2. Save the ATAC matrix (new file)
   saveRDS(atac_matrix, file = "final_atac_matrix.rds")
